@@ -7,8 +7,10 @@ void new_map(){
     printf("Enter Name of File (.bin): ");
     scanf("%c",&c);
     gets(name);
-    if(name[0]=='\0')
+    if(name[0]=='\0'){
         strcpy(name,"map.bin");
+        puts(name);
+    }
     while(!(n>0&&n<100)){
         if(n>=100)
             printf("ZIADE!!!");
@@ -37,8 +39,10 @@ void random_map(){
     printf("Enter Name of File (.bin): ");
     scanf("%c",&c);
     gets(name);
-    if(name[0]=='\0')
+    if(name[0]=='\0'){
         strcpy(name,"map.bin");
+        puts(name);
+    }
     while(!(n>-1&&n<100)){
         if(n>=100)
             printf("ZIADE!!!");
@@ -63,8 +67,10 @@ void editor(){
     printf("Enter Name of File (.bin): ");
     scanf("%c",&c);
     gets(name);
-    if(name[0]=='\0')
+    if(name[0]=='\0'){
         strcpy(name,"map.bin");
+        puts(name);
+    }
     FILE *f=fopen(name,"rb");///{why?
     if(f==NULL)
         return;
@@ -92,8 +98,10 @@ void view(){
     printf("Enter Name of File (.bin): ");
     scanf("%c",&c);
     gets(name);
-    if(name[0]=='\0')
+    if(name[0]=='\0'){
         strcpy(name,"map.bin");
+        puts(name);
+    }
     FILE *map_file = fopen(name,"r+b");
     if(map_file==NULL)
         return;
