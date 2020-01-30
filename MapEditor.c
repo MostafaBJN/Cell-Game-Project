@@ -107,7 +107,8 @@ void view(){
         return;
     fread(&n, sizeof(unsigned int), 1, map_file);
     char mp[n*n];
-    printf("n = %u \n",n);
+    system("cls");
+    printf("n = %u \n\n",n);
     fread(mp, sizeof(char), n*n,map_file);
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
@@ -116,11 +117,34 @@ void view(){
         printf("\n");
     }
     fclose(map_file);
+    strcat(name,".txt");
+    FILE *f=fopen(name,"wb");
+    fprintf(map_file,"n = %u \n\n",n);
+    for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            if(mp[i*n+j]=='1')
+                fprintf(map_file,"X ");
+            else if(mp[i*n+j]=='2')
+                fprintf(map_file,"S ");
+            else if(mp[i*n+j]=='3')
+                fprintf(map_file,"E ");
+            else if(mp[i*n+j]=='4')
+                fprintf(map_file,"' ");
+        }
+        fprintf(map_file,"\n");
+    }
+    printf("\n\n");
+    fprintf(map_file,"\n\n");
+    printf("Guide :\nENERGY = 1\nMITOSIS = 2\nFORBIDDEN = 3\nNORMAL = 4\n");
+    fprintf(f,"Guide :\nENERGY = E\nMITOSIS = S\nFORBIDDEN = X\nNORMAL = '\n");
+    fclose(f);
+    Sleep(4000);
 }
 
 void Map_Editor(){
     int a=0;
-        while(!(a==1||a==2||a==3||a==4)){
+    system("cls");
+    while(!(a==1||a==2||a==3||a==4)){
         printf("***MAP EDITOR***\n\n1)Make a New Map\n2)Make a Random Map\n3)Edit an Exist Map\n4)View Map\n");
         scanf("%d",&a);
     }
@@ -138,6 +162,7 @@ void Map_Editor(){
             view();
             break;
     }
+
 }
 
 /*{check if done
