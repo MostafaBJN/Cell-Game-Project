@@ -1,32 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "struct.h"
 
-struct position {
-    int x;
-    int y;
-};
-
-struct cells {
-    int energy;
-    char name[256];
-    struct position pos;
-    int level;
-    int energy_limit;
-};
-
-struct node {
-    struct cells *cell;
-    struct node *next;
-};
-
-
-struct Head {
-    struct node *head;
-    int length;
-};
-
-struct Head *pth;
+extern struct Head *pth;
 
 void Make_A_List(){
     pth=malloc(sizeof(struct Head));
