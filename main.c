@@ -31,10 +31,10 @@ void print_cell_list(struct Head *pth_player);
 void save_single_game(int n,struct MAP block[n][n],struct Head *pth_player);
 void load_single_game();
 void load();
-int mover();////
-void remover();////
-int check_be_inside();////
-int gain_energy();////
+int mover(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cell,int p);
+void remover(int x,int y,int n,struct MAP block[n][n]);
+int check_be_inside(int x,int y,int n);
+int gain_energy(int n,struct MAP block[n][n],struct cells *cell);
 int split();////
 int check_forbidden_block(int x,int y,int n,struct MAP block[n][n]);
 struct position rand_place(int n,struct MAP block[n][n],char cellname[],char player);
@@ -68,12 +68,14 @@ void game(struct Head *pth_player_1,int n,struct MAP block[n][n]){
     system("cls");
     print_map(n,block);
     print_cell_list(pth_player_1);
-    struct cells *cell=choose_cell(pth_player_1);
+    struct cells *cello = choose_cell(pth_player_1);
     system("cls");
     print_map(n,block);
-    if(Auto_Save==1)
+    if(Auto_Save==1){
         save_single_game(n,block,pth_player_1);
-    in_game_menu(n,block,pth_player_1,cell,0);
+        printf("***Saved***\n");
+    }
+    in_game_menu(n,block,pth_player_1,cello,0);
 }
 
 void in_game_menu(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cell,int p){
@@ -85,7 +87,7 @@ void in_game_menu(int n,struct MAP block[n][n],struct Head *pth_player,struct ce
     switch(a){
         case 1:
             print_map(n,block);
-            if(mover(n,block,pth_player,cell))
+            if(mover(n,block,pth_player,cell,p))
                 in_game_menu(n,block,pth_player,cell,p);
             else
                 game(pth_player,n,block);
@@ -97,7 +99,7 @@ void in_game_menu(int n,struct MAP block[n][n],struct Head *pth_player,struct ce
                 game(pth_player,n,block);
             break;
         case 3:
-            if(gain_energy())
+            if(gain_energy(n,block,cell))
                 in_game_menu(n,block,pth_player,cell,p);
             else
                 game(pth_player,n,block);
@@ -113,6 +115,36 @@ void in_game_menu(int n,struct MAP block[n][n],struct Head *pth_player,struct ce
     }
 }
 
+int gain_energy(int n,struct MAP block[n][n],struct cells *cell){
+    int e=100-cell->energy;
+    printf("AA");
+    if(e>15&&block[cell->pos.y-1][cell->pos.x-1].energy>15){
+        cell->energy+=15;
+        block[cell->pos.y-1][cell->pos.x-1].energy-=15;
+    }
+    else if(e>0&&e<15&&block[cell->pos.y-1][cell->pos.x-1].energy>15){
+        cell->energy+=e;
+        block[cell->pos.y-1][cell->pos.x-1].energy-=e;
+    }
+    else if(e>15&&block[cell->pos.y-1][cell->pos.x-1].energy>0&&block[cell->pos.y-1][cell->pos.x-1].energy<15){
+        cell->energy+=block[cell->pos.y-1][cell->pos.x-1].energy;
+        block[cell->pos.y-1][cell->pos.x-1].energy=0;
+    }
+    else if(e>0&&e<15&&block[cell->pos.y-1][cell->pos.x-1].energy>0&&block[cell->pos.y-1][cell->pos.x-1].energy<15){
+        if(e>block[cell->pos.y-1][cell->pos.x-1].energy){
+            cell->energy+=block[cell->pos.y-1][cell->pos.x-1].energy;
+            block[cell->pos.y-1][cell->pos.x-1].energy=0;
+        }
+        else{
+            cell->energy+=e;
+            block[cell->pos.y-1][cell->pos.x-1].energy-=e;
+        }
+    }
+    else
+        return 1;
+    return 0;
+}
+
 int mover(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cell,int p){
     int d=0;
     int x=cell->pos.x , y=cell->pos.y;
@@ -121,37 +153,73 @@ int mover(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cel
         printf("\n***MOVE MENU***\n\n1)Bala\n2)Bala-Rast\n3)Payin-Rast\n4)Payin\n5)Payin-Chap\n6)Bala-Chap\n");
         scanf("%d",&d);
     }
-    switch(d){
-        case 1:
-            if(check_be_inside(x,y-1,n)||check_forbidden_block(x,y-1,n,block))
-                return 1;
-            get_a_place(x,y-1,&cell->pos,n,block,cell->name,p);
-            break;
-        case 2:
-            if(check_be_inside(x+1,y,n)||check_forbidden_block(x+1,y,n,block))
-                return 1;
-            get_a_place(x+1,y,&cell->pos,n,block,cell->name,p);
-            break;
-        case 3:
-            if(check_be_inside(x+1,y+1,n)||check_forbidden_block(x+1,y+1,n,block))
-                return 1;
-            get_a_place(x+1,y+1,&cell->pos,n,block,cell->name,p);
-            break;
-        case 4:
-            if(check_be_inside(x,y+1,n)||check_forbidden_block(x,y+1,n,block))
-                return 1;
-            get_a_place(x,y+1,&cell->pos,n,block,cell->name,p);
-            break;
-        case 5:
-            if(check_be_inside(x-1,y+1,n)||check_forbidden_block(x-1,y+1,n,block))
-                return 1;
-            get_a_place(x-1,y+1,&cell->pos,n,block,cell->name,p);
-            break;
-        case 6:
-            if(check_be_inside(x-1,y,n)||check_forbidden_block(x-1,y,n,block))
-                return 1;
-            get_a_place(x-1,y,&cell->pos,n,block,cell->name,p);
-            break;
+    if(x%2==1){
+        switch(d){
+            case 1:
+                if(check_be_inside(x,y-1,n)||check_forbidden_block(x,y-1,n,block))
+                    return 1;
+                get_a_place(x,y-1,&cell->pos,n,block,cell->name,p);
+                break;
+            case 2:
+                if(check_be_inside(x+1,y,n)||check_forbidden_block(x+1,y,n,block))
+                    return 1;
+                get_a_place(x+1,y,&cell->pos,n,block,cell->name,p);
+                break;
+            case 3:
+                if(check_be_inside(x+1,y+1,n)||check_forbidden_block(x+1,y+1,n,block))
+                    return 1;
+                get_a_place(x+1,y+1,&cell->pos,n,block,cell->name,p);
+                break;
+            case 4:
+                if(check_be_inside(x,y+1,n)||check_forbidden_block(x,y+1,n,block))
+                    return 1;
+                get_a_place(x,y+1,&cell->pos,n,block,cell->name,p);
+                break;
+            case 5:
+                if(check_be_inside(x-1,y+1,n)||check_forbidden_block(x-1,y+1,n,block))
+                    return 1;
+                get_a_place(x-1,y+1,&cell->pos,n,block,cell->name,p);
+                break;
+            case 6:
+                if(check_be_inside(x-1,y,n)||check_forbidden_block(x-1,y,n,block))
+                    return 1;
+                get_a_place(x-1,y,&cell->pos,n,block,cell->name,p);
+                break;
+        }
+    }
+    else{
+        switch(d){
+            case 1:
+                if(check_be_inside(x,y-1,n)||check_forbidden_block(x,y-1,n,block))
+                    return 1;
+                get_a_place(x,y-1,&cell->pos,n,block,cell->name,p);
+                break;
+            case 2:
+                if(check_be_inside(x+1,y+1,n)||check_forbidden_block(x+1,y+1,n,block))
+                    return 1;
+                get_a_place(x+1,y+1,&cell->pos,n,block,cell->name,p);
+                break;
+            case 3:
+                if(check_be_inside(x+1,y,n)||check_forbidden_block(x+1,y,n,block))
+                    return 1;
+                get_a_place(x+1,y,&cell->pos,n,block,cell->name,p);
+                break;
+            case 4:
+                if(check_be_inside(x,y+1,n)||check_forbidden_block(x,y+1,n,block))
+                    return 1;
+                get_a_place(x,y+1,&cell->pos,n,block,cell->name,p);
+                break;
+            case 5:
+                if(check_be_inside(x-1,y,n)||check_forbidden_block(x-1,y,n,block))
+                    return 1;
+                get_a_place(x-1,y,&cell->pos,n,block,cell->name,p);
+                break;
+            case 6:
+                if(check_be_inside(x-1,y+1,n)||check_forbidden_block(x-1,y+1,n,block))
+                    return 1;
+                get_a_place(x-1,y+1,&cell->pos,n,block,cell->name,p);
+                break;
+        }
     }
     remover(x,y,n,block);
     return 0;
@@ -170,11 +238,6 @@ int check_be_inside(int x,int y,int n){
 }
 
 int split(){
-
-    return 0;
-}
-
-int gain_energy(){
 
     return 0;
 }
