@@ -26,14 +26,14 @@ int rand_beetwin(int start,int end);
 void print_map(int n,struct MAP block[n][n]);
 void new_load_map(int n,struct MAP block[n][n],char tmp[n*n],FILE *f);
 void main_menu();
-void in_game_menu(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cell);
+void in_game_menu(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cell,int p);
 void print_cell_list(struct Head *pth_player);
 void save_single_game(int n,struct MAP block[n][n],struct Head *pth_player);
 void load_single_game();
 void load();
 int mover();////
-// remover();
-// check_be_inside();
+void remover();////
+int check_be_inside();////
 int gain_energy();////
 int split();////
 int check_forbidden_block(int x,int y,int n,struct MAP block[n][n]);
@@ -73,38 +73,39 @@ void game(struct Head *pth_player_1,int n,struct MAP block[n][n]){
     print_map(n,block);
     if(Auto_Save==1)
         save_single_game(n,block,pth_player_1);
-    in_game_menu(n,block,pth_player_1,cell);
+    in_game_menu(n,block,pth_player_1,cell,0);
 }
 
-void in_game_menu(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cell){
+void in_game_menu(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cell,int p){
     int a=0;
     while(!(a==1||a==2||a==3||a==4||a==5)){
-        printf("\n***PLAY MENU***\n\n1)Move\n2)Split\n3)Gain Energy\n4)Save\n5)Exit\n");
+        printf("\n***PLAY MENU***\n\n1)Move\n2)Split\n3)Gain Energy\n4)Save\n5)Main Menu\n");
         scanf("%d",&a);
     }
     switch(a){
         case 1:
-            if(mover())
-                in_game_menu(n,block,pth_player,cell);
+            print_map(n,block);
+            if(mover(n,block,pth_player,cell))
+                in_game_menu(n,block,pth_player,cell,p);
             else
                 game(pth_player,n,block);
             break;
         case 2:
             if(split())
-                in_game_menu(n,block,pth_player,cell);
+                in_game_menu(n,block,pth_player,cell,p);
             else
                 game(pth_player,n,block);
             break;
         case 3:
             if(gain_energy())
-                in_game_menu(n,block,pth_player,cell);
+                in_game_menu(n,block,pth_player,cell,p);
             else
                 game(pth_player,n,block);
             break;
         case 4:
             save_single_game(n,block,pth_player);
             printf("Successfully Saved !\n");//
-            in_game_menu(n,block,pth_player,cell);
+            in_game_menu(n,block,pth_player,cell,p);
             break;
         case 5:
             main_menu();
@@ -112,9 +113,60 @@ void in_game_menu(int n,struct MAP block[n][n],struct Head *pth_player,struct ce
     }
 }
 
-int mover(){
+int mover(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cell,int p){
+    int d=0;
+    int x=cell->pos.x , y=cell->pos.y;
+    printf("\n          _____          \n         /     \\        \n   _____/   1   \\_____ \n  /     \\       /     \\ \n /   6   \\_____/   2   \\ \n \\       /     \\       / \n  \\_____/       \\_____/ \n  /     \\       /     \\ \n /   5   \\_____/   3   \\ \n \\       /     \\       / \n  \\_____/   4   \\_____/ \n        \\       / \n         \\_____/ \n");
+    while(!(d==1||d==2||d==3||d==4||d==5||d==6)){
+        printf("\n***MOVE MENU***\n\n1)Bala\n2)Bala-Rast\n3)Payin-Rast\n4)Payin\n5)Payin-Chap\n6)Bala-Chap\n");
+        scanf("%d",&d);
+    }
+    switch(d){
+        case 1:
+            if(check_be_inside(x,y-1,n)||check_forbidden_block(x,y-1,n,block))
+                return 1;
+            get_a_place(x,y-1,&cell->pos,n,block,cell->name,p);
+            break;
+        case 2:
+            if(check_be_inside(x+1,y,n)||check_forbidden_block(x+1,y,n,block))
+                return 1;
+            get_a_place(x+1,y,&cell->pos,n,block,cell->name,p);
+            break;
+        case 3:
+            if(check_be_inside(x+1,y+1,n)||check_forbidden_block(x+1,y+1,n,block))
+                return 1;
+            get_a_place(x+1,y+1,&cell->pos,n,block,cell->name,p);
+            break;
+        case 4:
+            if(check_be_inside(x,y+1,n)||check_forbidden_block(x,y+1,n,block))
+                return 1;
+            get_a_place(x,y+1,&cell->pos,n,block,cell->name,p);
+            break;
+        case 5:
+            if(check_be_inside(x-1,y+1,n)||check_forbidden_block(x-1,y+1,n,block))
+                return 1;
+            get_a_place(x-1,y+1,&cell->pos,n,block,cell->name,p);
+            break;
+        case 6:
+            if(check_be_inside(x-1,y,n)||check_forbidden_block(x-1,y,n,block))
+                return 1;
+            get_a_place(x-1,y,&cell->pos,n,block,cell->name,p);
+            break;
+    }
+    remover(x,y,n,block);
+    return 0;
+}
 
-   return 0;
+void remover(int x,int y,int n,struct MAP block[n][n]){
+    block[y-1][x-1].player[0]='.';
+    block[y-1][x-1].player[1]='.';
+    block[y-1][x-1].player[2]='.';
+}
+
+int check_be_inside(int x,int y,int n){
+    if(x<1||x>n||y<1||y>n)
+        return 1;
+    return 0;
 }
 
 int split(){
@@ -302,10 +354,8 @@ void get_a_place(int x,int y,struct position *place,int n,struct MAP block[n][n]
 }
 
 int check_forbidden_block(int x,int y,int n,struct MAP block[n][n]){
-    if(block[y-1][x-1].type=='3'||block[y-1][x-1].player[0]!='.'){
+    if(block[y-1][x-1].type=='3'||block[y-1][x-1].player[0]!='.')
         return 1;
-    }
-
     return 0;
 }
 
