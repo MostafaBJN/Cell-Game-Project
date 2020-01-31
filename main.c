@@ -20,8 +20,7 @@ struct MAP{
 };
 
 struct Head *pth;
-struct Head *pth_player_1;
-struct Head *pth_player_2;
+int Auto_Save=0;
 
 int rand_beetwin(int start,int end);
 void print_map(int n,struct MAP block[n][n]);
@@ -29,8 +28,10 @@ void new_load_map(int n,struct MAP block[n][n],char tmp[n*n],FILE *f);
 void main_menu();
 void in_game_menu(struct cells *cell);
 void print_cell_list();/////
-void save_game();////
-void load_game();////
+void save_single_game();////
+void load_single_game();////
+void load();
+void save();
 int mover();////
 // remover();
 int gain_energy();////
@@ -46,6 +47,7 @@ void one_player();
 void two_player();////
 void game(struct Head *pth_player_1,int n,struct MAP block[n][n]);
 void extra();
+void setting();
 
 int main(){
     time_t t=time(NULL);
@@ -54,11 +56,29 @@ int main(){
     return 0;
 }
 
+void two_player(){
+    struct Head *pth_player_1;
+    struct Head *pth_player_2;
+    Make_A_List();
+    pth_player_1=pth;
+    Make_A_List();
+    pth_player_2=pth;
+}
+
+void game(struct Head *pth_player_1,int n,struct MAP block[n][n]){
+    system("cls");
+    print_map(n,block);
+    print_cell_list(pth_player_1);
+    struct cells *cell=choose_cell(pth_player_1);
+    system("cls");
+    print_map(n,block);
+    in_game_menu(cell);
+}
+
 void in_game_menu(struct cells *cell){
     int a=0;
-    system("cls");
     while(!(a==1||a==2||a==3||a==4||a==5)){
-        printf("***PLAY MENU***\n\n1)Move\n2)Split\n3)Gain Energy\n4)Save\n5)Exit\n");
+        printf("\n***PLAY MENU***\n\n1)Move\n2)Split\n3)Gain Energy\n4)Save\n5)Exit\n");
         scanf("%d",&a);
     }
     switch(a){
@@ -84,11 +104,49 @@ void in_game_menu(struct cells *cell){
     }
 }
 
-void two_player(){
+void save_single_game(int n,struct MAP block[n][n],struct Head *pth_player){
+    FILE *f=fopen("save SinglePlayer.bin","wb+");
+    fwrite(&n,sizeof(int),1,f);
+    fwrite(block,sizeof(struct MAP),n*n,f);
+    struct node *cur=pth_player->head;
+    fwrite(&pth_player->length,sizeof(int),1,f);
+    for(;cur!=NULL;cur=cur->next)
+        fwrite(cur->cell,sizeof(struct cells),1,f);
+    fclose(f);
+}
+
+void load_single_game(){
+    FILE *f=fopen("save SinglePlayer.bin","rb+");
+    int n;
+    fread(&n,sizeof(int),1,f);
+    struct MAP block[n][n];
+    fread(block,sizeof(struct MAP),n*n,f);
+    int length,i;
+    fread(&length,sizeof(int),1,f);
     Make_A_List();
-    pth_player_1=pth;
-    Make_A_List();
-    pth_player_2=pth;
+    struct Head *pth_player_1=pth;
+    for(i=0;i<length;i++){
+        struct cells *cell=malloc(sizeof(struct cells));
+        fread(cell,sizeof(struct cells),1,f);
+        addEnd(cell);
+    }
+    fclose(f);
+}
+
+void load(){
+    int a;
+    printf("***LOAD MENU***\n\n1)Single Player\n2)Multi Player\n3)Exit\n");
+    scanf("%d",&a);
+    switch(a){
+        case 1:
+            load_single_game();
+            break;
+        case 2:
+            break;
+        case 3:
+            main_menu();
+            break;
+    }
 }
 
 void one_player(){
@@ -112,6 +170,7 @@ void one_player(){
     fread(&n, sizeof(unsigned int), 1, f);
     char tmp[n*n];
     fread(tmp, sizeof(char), n*n, f);
+    fclose(f);
     struct MAP block[n][n];
     new_load_map(n,block,tmp,f);
     ///
@@ -125,7 +184,7 @@ void one_player(){
     scanf("%d",&num);
     for(i=0;i<num;i++){
         char cellname[256];
-        printf("Enter Name of Cell %d (Enter for Random): ",i+1);
+        printf("Name Cellool %d ra Vared Konid (Enter for Random Name) : ",i+1);
         if(i==0)
             scanf("%c",&c);
         gets(cellname);
@@ -139,14 +198,6 @@ void one_player(){
     }
     ///
     game(pth_player_1,n,block);
-}
-
-void game(struct Head *pth_player_1,int n,struct MAP block[n][n]){
-    system("cls");
-    print_map(n,block);
-    print_cell_list(pth_player_1);
-    struct cells *cell=choose_cell(pth_player_1);
-    in_game_menu(cell);
 }
 
 struct cells *choose_cell(struct Head *pth_player){
@@ -250,7 +301,7 @@ void main_menu(){
     system("cls");
     switch(a){
         case 1:
-            //load_game();
+            load();
             break;
         case 2:
             one_player();
@@ -263,6 +314,7 @@ void main_menu(){
             main_menu();
             break;
         case 5:
+            setting();
             main_menu();
             break;
         case 6:
@@ -275,6 +327,14 @@ void main_menu(){
             exit(0);
             break;
     }
+}
+
+void setting(){
+    int a=0;
+    printf("***SETTING***\n\nAuto Save :\n1)Off\n2)On\n");
+    while(!(a==1||a==2))
+        scanf("%d",&a);
+    Auto_Save = a-1;
 }
 
 void print_map(int n,struct MAP block[n][n]){
