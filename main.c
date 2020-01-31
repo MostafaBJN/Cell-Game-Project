@@ -153,7 +153,7 @@ int mover(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cel
         printf("\n***MOVE MENU***\n\n1)Bala\n2)Bala-Rast\n3)Payin-Rast\n4)Payin\n5)Payin-Chap\n6)Bala-Chap\n");
         scanf("%d",&d);
     }
-    if(x%2==1){
+    if(x%2==0){
         switch(d){
             case 1:
                 if(check_be_inside(x,y-1,n)||check_forbidden_block(x,y-1,n,block))
@@ -195,9 +195,9 @@ int mover(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cel
                 get_a_place(x,y-1,&cell->pos,n,block,cell->name,p);
                 break;
             case 2:
-                if(check_be_inside(x+1,y+1,n)||check_forbidden_block(x+1,y+1,n,block))
+                if(check_be_inside(x+1,y-1,n)||check_forbidden_block(x+1,y-1,n,block))
                     return 1;
-                get_a_place(x+1,y+1,&cell->pos,n,block,cell->name,p);
+                get_a_place(x+1,y-1,&cell->pos,n,block,cell->name,p);
                 break;
             case 3:
                 if(check_be_inside(x+1,y,n)||check_forbidden_block(x+1,y,n,block))
@@ -215,9 +215,9 @@ int mover(int n,struct MAP block[n][n],struct Head *pth_player,struct cells *cel
                 get_a_place(x-1,y,&cell->pos,n,block,cell->name,p);
                 break;
             case 6:
-                if(check_be_inside(x-1,y+1,n)||check_forbidden_block(x-1,y+1,n,block))
+                if(check_be_inside(x-1,y-1,n)||check_forbidden_block(x-1,y-1,n,block))
                     return 1;
-                get_a_place(x-1,y+1,&cell->pos,n,block,cell->name,p);
+                get_a_place(x-1,y-1,&cell->pos,n,block,cell->name,p);
                 break;
         }
     }
@@ -273,17 +273,19 @@ void load_single_game(){
         addEnd(cell);
     }
     fclose(f);
+    game(pth_player_1,n,block);
 }
 
 void load(){
     int a;
-    printf("***LOAD MENU***\n\n1)Single Player\n2)Multi Player\n3)Exit\n");
+    printf("***LOAD MENU***\n\n1)Single Player\n2)Multi Player\n3)Main Menu\n");
     scanf("%d",&a);
     switch(a){
         case 1:
             load_single_game();
             break;
         case 2:
+            main_menu();
             break;
         case 3:
             main_menu();
@@ -447,10 +449,12 @@ void main_menu(){
             load();
             break;
         case 2:
+            setting();
+            system("cls");
             one_player();
             break;
         case 3:
-            two_player();
+            main_menu();
             break;
         case 4:
             Map_Editor();
