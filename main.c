@@ -27,21 +27,24 @@ int rand_beetwin(int start,int end);
 void print_map(int n,struct MAP block[n][n]);
 void new_load_map(int n,struct MAP block[n][n],char tmp[n*n],FILE *f);
 void main_menu();
-void in_game_menu();
+void in_game_menu(struct cells *cell);
+void print_cell_list();/////
 void save_game();////
 void load_game();////
 int mover();////
-/// move_cell();
-/// remove_cell();
+// remover();
 int gain_energy();////
 int split();////
-int check_forbidden_block();//////////
-/// check_be_inside();
+int check_forbidden_block(int x,int y,int n,struct MAP block[n][n]);
+// check_be_inside();
 struct position rand_place(int n,struct MAP block[n][n],char cellname[],char player);
+void get_a_place(int x,int y,struct position *place,int n,struct MAP block[n][n],char cellname[],char player);
 char *rand_name(int size);
+struct cells *find_a_cell(struct Head *pth_player,char *name);
+struct cells *choose_cell(struct Head *pth_player);
 void one_player();
 void two_player();////
-void game(int n);////
+void game(struct Head *pth_player_1,int n,struct MAP block[n][n]);
 void extra();
 
 int main(){
@@ -51,6 +54,36 @@ int main(){
     return 0;
 }
 
+void in_game_menu(struct cells *cell){
+    int a=0;
+    system("cls");
+    while(!(a==1||a==2||a==3||a==4||a==5)){
+        printf("***PLAY MENU***\n\n1)Move\n2)Split\n3)Gain Energy\n4)Save\n5)Exit\n");
+        scanf("%d",&a);
+    }
+    switch(a){
+        case 1:
+            //if(mover())
+                in_game_menu(cell);
+            break;
+        case 2:
+            //if(split())
+                in_game_menu(cell);
+            break;
+        case 3:
+            //if(gain_energy())
+                in_game_menu(cell);
+            break;
+        case 4:
+            //save_game();
+            in_game_menu(cell);
+            break;
+        case 5:
+            main_menu();
+            break;
+    }
+}
+
 void two_player(){
     Make_A_List();
     pth_player_1=pth;
@@ -58,12 +91,9 @@ void two_player(){
     pth_player_2=pth;
 }
 
-void game(int n){
-
-}
-
 void one_player(){
-    char name[256],c;///open new map;
+    ///open new map;
+    char name[256],c;
     unsigned int n;
     printf("Enter Name of File (.bin): ");
     scanf("%c",&c);
@@ -84,9 +114,9 @@ void one_player(){
     fread(tmp, sizeof(char), n*n, f);
     struct MAP block[n][n];
     new_load_map(n,block,tmp,f);
-
-
-    int num,i,j,rx,ry;///making cells
+    ///
+    ///making cells
+    int num,i,j,rx,ry;
     struct position pos;
     Make_A_List();
     struct Head *pth_player_1=pth;
@@ -95,7 +125,7 @@ void one_player(){
     scanf("%d",&num);
     for(i=0;i<num;i++){
         char cellname[256];
-        printf("Enter Name of Cell (Enter for Random): ");
+        printf("Enter Name of Cell %d (Enter for Random): ",i+1);
         if(i==0)
             scanf("%c",&c);
         gets(cellname);
@@ -107,8 +137,48 @@ void one_player(){
         }
         addEnd(Make_A_Cell(rand_place(n,block,cellname,'0'),cellname));
     }
+    ///
+    game(pth_player_1,n,block);
+}
 
+void game(struct Head *pth_player_1,int n,struct MAP block[n][n]){
+    system("cls");
     print_map(n,block);
+    print_cell_list(pth_player_1);
+    struct cells *cell=choose_cell(pth_player_1);
+    in_game_menu(cell);
+}
+
+struct cells *choose_cell(struct Head *pth_player){
+    char name_of_cell[256];
+    printf("Name Cellool Morede Nazzar ra Vared Konid : ");
+    gets(name_of_cell);
+    struct cells *cell=find_a_cell(pth_player,name_of_cell);
+    printf("Done");
+    return cell;
+}
+
+struct cells *find_a_cell(struct Head *pth_player,char *name){
+    struct node *cur=pth_player->head;
+    for(;cur!=NULL&&strcmp(cur->cell->name,name);cur=cur->next);
+    if(cur==NULL){
+        printf("Cell Not Found !\n");
+        choose_cell(pth_player);
+    }
+    printf("Found");
+    return cur->cell;
+}
+
+void print_cell_list(struct Head *pth_player){
+    int i;
+    struct node *cur=pth_player->head;
+    printf("List of Your Cells : \n");
+    for(;cur!=NULL;cur=cur->next){
+        printf("Name : %s | ",cur->cell->name);
+        printf("position : x=%d , y=%d | ",cur->cell->pos.x,cur->cell->pos.y);
+        printf("Energy : %d \n",cur->cell->energy);
+    }
+    printf("-------------------\n");
 }
 
 struct position rand_place(int n,struct MAP block[n][n],char cellname[],char player){
@@ -177,6 +247,7 @@ void main_menu(){
         printf("***MAIN MENU***\n\n1)Load Game\n2)New Single Player Game\n3)New Multi Player Game\n4)Map Editor\n5)Setting\n6)Extra\n7)Exit\n");
         scanf("%d",&a);
     }
+    system("cls");
     switch(a){
         case 1:
             //load_game();
@@ -207,8 +278,7 @@ void main_menu(){
 }
 
 void print_map(int n,struct MAP block[n][n]){
-    printf("\n\n***%d***\n\n",n);
-    printf("Game Map\n");
+    printf("***Game Map***\n");
     int i,j,k,u1,u2,u3,u4,u5,u6,u7,B;
     if(BlockSize%2==0)
         B=BlockSize/2;
@@ -360,41 +430,13 @@ int rand_beetwin(int start,int end){
 
 void extra(){
     system("cls");
-    printf("Map of Next Version\n\n");
-    printf("   _____         _____\n  /     \\       /     \\ \n /   o   \\_____/   o   \\ \n \\       /     \\       /\n  \\_____/   o   \\_____/\n  /     \\       /     \\ \n /   o   \\_____/   o   \\ \n \\       /     \\       / \n  \\_____/   o   \\_____/ \n  /     \\       /     \\ \n /   o   \\_____/   o   \\ \n \\       /     \\       / \n  \\_____/   o   \\_____/ \n        \\       / \n         \\_____/ \n");
-    Sleep(4000);
+    printf("***Map of Next Version***\n\n");
+    Sleep(1000);
+    printf("   _____         _____\n  /     \\       /     \\ \n /       \\_____/       \\ \n \\       /     \\       /\n  \\_____/       \\_____/\n  /     \\       /     \\ \n /       \\_____/       \\ \n \\       /     \\       / \n  \\_____/       \\_____/ \n  /     \\       /     \\ \n /       \\_____/       \\ \n \\       /     \\       / \n  \\_____/       \\_____/ \n        \\       / \n         \\_____/ \n");
+    Sleep(3000);
     return;
 }
 
-/**void in_game_menu(){
-    int a=0;
-    system("cls");
-    while(!(a==1||a==2||a==3||a==4||a==5)){
-        printf("***MAIN MENU***\n\n1)Move\n2)Split\n3)Gain Energy\n4)Save\n5)Exit\n");
-        scanf("%d",&a);
-    }
-    switch(a){
-        case 1:
-            if(mover())
-                in_game_menu();
-            break;
-        case 2:
-            if(split())
-                in_game_menu();
-            break;
-        case 3:
-            if(gain_energy())
-                in_game_menu();
-            break;
-        case 4:
-            save_game();
-            in_game_menu();
-            break;
-        case 5:
-            main_menu();
-            break;
-    }
-}*/
 
 
 ///Next Version Map
