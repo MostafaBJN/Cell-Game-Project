@@ -14,7 +14,7 @@ enum blocks {
 
 struct MAP{
     char type;
-    char player[2];
+    char player[3];
     int energy;
     struct position pos;
 };
@@ -24,11 +24,10 @@ struct Head *pth_player_1;
 struct Head *pth_player_2;
 
 int rand_beetwin(int start,int end);
-void print_map(int n);
+void print_map(int n,struct MAP block[n][n]);
 void new_load_map(int n,struct MAP block[n][n],char tmp[n*n],FILE *f);
 void main_menu();
 void in_game_menu();
-void first_add_cell();////
 void save_game();////
 void load_game();////
 int mover();////
@@ -40,27 +39,28 @@ int check_forbidden_block();//////////
 /// check_be_inside();
 struct position rand_place(int n,struct MAP block[n][n],char cellname[],char player);
 char *rand_name(int size);
-void one_player();////
+void one_player();
 void two_player();////
 void game(int n);////
 void extra();
 
 int main(){
-    srand(time(NULL));
-    //Map_Editor();
-    //str_main();
+    time_t t=time(NULL);
+    srand(t);
     main_menu();
     return 0;
 }
 
+void two_player(){
+    Make_A_List();
+    pth_player_1=pth;
+    Make_A_List();
+    pth_player_2=pth;
+}
+
 void game(int n){
-    print_map(n);
-}
-
-void first_add_cell(){
 
 }
-
 
 void one_player(){
     char name[256],c;///open new map;
@@ -108,8 +108,7 @@ void one_player(){
         addEnd(Make_A_Cell(rand_place(n,block,cellname,'0'),cellname));
     }
 
-
-
+    print_map(n,block);
 }
 
 struct position rand_place(int n,struct MAP block[n][n],char cellname[],char player){
@@ -119,26 +118,44 @@ struct position rand_place(int n,struct MAP block[n][n],char cellname[],char pla
         rx = rand_beetwin(1,n);
         ry = rand_beetwin(1,n);
     }
-    while(!check_forbidden_block(rx,ry,n,block));
-    block[ry-1][rx-1].player[0]=cellname[0];
-    block[ry-1][rx-1].player[1]=player;
-    place.x = rx;
-    place.y = ry;
+    while(check_forbidden_block(rx,ry,n,block));
+    get_a_place(rx,ry,&place,n,block,cellname,player);
     return place;
 }
 
-int check_forbidden_block(int x,int y,int n,struct MAP block[n][n]){
-    if(block[y-1][x-1].type=='3'){
-        return 1;
+void get_a_place(int x,int y,struct position *place,int n,struct MAP block[n][n],char cellname[],char player){
+    block[y-1][x-1].player[0]=cellname[0];
+    if(cellname[1]=='\0'){
+        block[y-1][x-1].player[1]='.';
+        if(player=='0')
+            block[y-1][x-1].player[2]='.';
+        else if(player=='1'||player=='2')
+            block[y-1][x-1].player[2]=player;
     }
-    return 0;
+    else if(cellname[2]=='\0'){
+        block[y-1][x-1].player[1]=cellname[1];
+        if(player=='0')
+            block[y-1][x-1].player[2]='.';
+        else if(player=='1'||player=='2')
+            block[y-1][x-1].player[2]=player;
+    }
+    else{
+        block[y-1][x-1].player[1]=cellname[1];
+        if(player=='0')
+            block[y-1][x-1].player[2]=cellname[2];
+        else if(player=='1'||player=='2')
+            block[y-1][x-1].player[2]=player;
+    }
+    place->x = x;
+    place->y = y;
 }
 
-void two_player(){
-    Make_A_List();
-    pth_player_1=pth;
-    Make_A_List();
-    pth_player_2=pth;
+int check_forbidden_block(int x,int y,int n,struct MAP block[n][n]){
+    if(block[y-1][x-1].type=='3'||block[y-1][x-1].player[0]!='.'){
+        return 1;
+    }
+
+    return 0;
 }
 
 char *rand_name(int size){
@@ -150,40 +167,8 @@ char *rand_name(int size){
         name[i]=allchars[n];
     }
     name[size]='\0';
-    printf("%s  ",name);
     return name;
 }
-
-/**void in_game_menu(){
-    int a=0;
-    system("cls");
-    while(!(a==1||a==2||a==3||a==4||a==5)){
-        printf("***MAIN MENU***\n\n1)Move\n2)Split\n3)Gain Energy\n4)Save\n5)Exit\n");
-        scanf("%d",&a);
-    }
-    switch(a){
-        case 1:
-            if(mover())
-                in_game_menu();
-            break;
-        case 2:
-            if(split())
-                in_game_menu();
-            break;
-        case 3:
-            if(gain_energy())
-                in_game_menu();
-            break;
-        case 4:
-            save_game();
-            in_game_menu();
-            break;
-        case 5:
-            main_menu();
-            break;
-    }
-}*/
-
 
 void main_menu(){
     int a=0;
@@ -221,69 +206,99 @@ void main_menu(){
     }
 }
 
-void print_map(int n){
-    int m;
-    if(n%2==0)
-        m=n+1;
-    else
-        m=n;
+void print_map(int n,struct MAP block[n][n]){
+    printf("\n\n***%d***\n\n",n);
     printf("Game Map\n");
-    int i,j,k,u1,u2,u3,u4,u5,u6,B;
+    int i,j,k,u1,u2,u3,u4,u5,u6,u7,B;
     if(BlockSize%2==0)
         B=BlockSize/2;
     else
         B=(BlockSize+1)/2;
     for(i=0,u1=0;i<=n*BlockSize+B;i++,u1++){///shomare satr
-        for(j=0,u2=0,u3=0,u4=0,u5=0,u6=0;j<m;j++){///por kardane satr
+        for(j=0,u2=0,u3=0,u4=0,u5=0,u6=0,u7=0;j<n;j++){///por kardane satr
             if(i<=n*BlockSize){
-                if(u1%BlockSize==0){
-                    if(u1==0&&u2%2==0){///first line //top
-                        printf(" ");
-                        for(k=0;k<ToleBlock;k++)
-                            printf("_");
-                        printf(" ");
-                    }
-                    else if(u2%2==0){///bottoms
+                if(n%2==0&&j==n-1&&u7==1){///for correct print of last wall for zoje n
+                    if(i>3)
                         printf("|");
-                        for(k=0;k<ToleBlock;k++)
-                            printf("_");
-                        printf("|");
-                    }
-                    else{///midle of blocks , zoje ha (payintar ha)[cells]
-                        for(k=0;k<ToleBlock;k++)
-                            printf("x");
-                    }
-                    u2++;
-                }
-                else if(u1%BlockSize==B){
-                    if(u4%2==0){///midle of blocks , fard ha (balatar ha)[cells]
-                        printf("|");
-                        for(k=0;k<ToleBlock;k++)
-                            printf("o");
-                        printf("|");
-                    }
-                    else{///top of zoje blocks
-                        for(k=0;k<ToleBlock;k++)
-                            printf("_");
-                    }
-                    u4++;
                 }
                 else{
-                    if(u3%2==0){///other empty inside blocks , fard ha[type]
-                        printf("|");
-                        for(k=0;k<ToleBlock;k++)
-                            printf("l");//////////////////////////
-                        printf("|");
-                    }
-                    else{///other empty inside blocks , zoje ha (WARNING :first is out side va shamele akharish nemishe)
-                        if(u1==1||u1==2)///outside
+                    if(u1%BlockSize==0){
+                        if(u1==0&&u2%2==0){///first line //top
+                            printf(" ");
                             for(k=0;k<ToleBlock;k++)
-                                printf(" ");
-                        else///all insides except 2 last line
+                                printf("_");
+                            printf(" ");
+                        }
+                        else if(u2%2==0){///bottoms
+                            printf("|");
                             for(k=0;k<ToleBlock;k++)
-                                printf("k");
+                                printf("_");
+                            printf("|");
+                        }
+                        else{///midle of blocks , zoje ha (payintar ha)[cells]
+                            for(k=0;k<ToleBlock;k++){
+                                if(i!=0&&block[(i-1)/BlockSize][j].player[0]!='.'){
+                                    if(k==2)
+                                        printf("%c",block[(i-1)/BlockSize][j].player[0]);
+                                    else if(k==3)
+                                        printf("%c",block[(i-1)/BlockSize][j].player[1]);
+                                    else if(k==4)
+                                        printf("%c",block[(i-1)/BlockSize][j].player[2]);
+                                    else
+                                        printf(" ");
+                                }
+                                else
+                                    printf(" ");
+                            }
+                        }
+                        u2++;
                     }
-                    u3++;
+                    else if(u1%BlockSize==B){
+                        if(u4%2==0){///midle of blocks , fard ha (balatar ha)[cells]
+                            printf("|");
+                            for(k=0;k<ToleBlock;k++){
+                                if(i!=0&&block[(i-1)/BlockSize][j].player[0]!='.'){
+                                    if(k==2)
+                                        printf("%c",block[(i-1)/BlockSize][j].player[0]);
+                                    else if(k==3)
+                                        printf("%c",block[(i-1)/BlockSize][j].player[1]);
+                                    else if(k==4)
+                                        printf("%c",block[(i-1)/BlockSize][j].player[2]);
+                                    else
+                                        printf(" ");
+                                }
+                                else
+                                    printf(" ");
+                            }
+                            printf("|");
+                        }
+                        else{///top of zoje blocks
+                            for(k=0;k<ToleBlock;k++)
+                                printf("_");
+                        }
+                        u4++;
+                    }
+                    else{
+                        if(u3%2==0){///other empty inside blocks , fard ha[type]
+                            printf("|");
+                            for(k=0;k<ToleBlock;k++)
+                                printf(" ");//////////////////////////
+                            printf("|");
+                        }
+                        else{///other empty inside blocks , zoje ha (WARNING :first is out side va shamele akharish nemishe)
+                            if(u1==1||u1==2)///outside
+                                for(k=0;k<ToleBlock;k++)
+                                    printf(" ");
+                            else///all insides except 2 last line
+                                for(k=0;k<ToleBlock;k++)
+                                    printf(" ");
+                        }
+                        u3++;
+                    }
+                    if(n%2==0&&j==n-1){///correct last wall of zoje n
+                        j--;
+                        u7++;
+                    }
                 }
             }
             else if(i==n*BlockSize+B){
@@ -304,7 +319,7 @@ void print_map(int n){
             else{
                 if(u5==0)
                     printf(" ");
-                if(u5%2==1){///bottom inside which
+                if(u5%2==1){///bottom inside last
                     printf("|");
                     for(k=0;k<ToleBlock;k++)
                         printf(" ");
@@ -330,6 +345,7 @@ void new_load_map(int n,struct MAP block[n][n],char tmp[n*n],FILE *f){
             block[i][j].pos.y=i+1;
             block[i][j].player[0]='.';
             block[i][j].player[1]='.';
+            block[i][j].player[2]='.';
             if(block[i][j].type=='1')
                 block[i][j].energy=100;
             else
@@ -349,6 +365,38 @@ void extra(){
     Sleep(4000);
     return;
 }
+
+/**void in_game_menu(){
+    int a=0;
+    system("cls");
+    while(!(a==1||a==2||a==3||a==4||a==5)){
+        printf("***MAIN MENU***\n\n1)Move\n2)Split\n3)Gain Energy\n4)Save\n5)Exit\n");
+        scanf("%d",&a);
+    }
+    switch(a){
+        case 1:
+            if(mover())
+                in_game_menu();
+            break;
+        case 2:
+            if(split())
+                in_game_menu();
+            break;
+        case 3:
+            if(gain_energy())
+                in_game_menu();
+            break;
+        case 4:
+            save_game();
+            in_game_menu();
+            break;
+        case 5:
+            main_menu();
+            break;
+    }
+}*/
+
+
 ///Next Version Map
 /**
    _____         _____
