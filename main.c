@@ -14,8 +14,9 @@ enum blocks {
 
 struct MAP{
     char type;
+    char player[2];
     int energy;
-    struct position xy;
+    struct position pos;
 };
 
 struct Head *pth;
@@ -35,40 +36,20 @@ int mover();////
 /// remove_cell();
 int gain_energy();////
 int split();////
-/// check_forbidden_block();
+int check_forbidden_block();//////////
 /// check_be_inside();
-/// rand_name();
+struct position rand_place(int n,struct MAP block[n][n],char cellname[],char player);
+char *rand_name(int size);
 void one_player();////
 void two_player();////
-void game(int n);
+void game(int n);////
 void extra();
 
 int main(){
     srand(time(NULL));
     //Map_Editor();
     //str_main();
-    /**char name[256],c;///open first map;
-    unsigned int n;
-    printf("Enter Name of File (.bin): ");
-    scanf("%c",&c);
-    gets(name);
-    if(name[0]=='\0'){
-        strcpy(name,"map.bin");
-        puts(name);
-    }
-    FILE *f = fopen(name,"r+b");
-    if(f==NULL){
-        system("cls");
-        printf("File Not Found !");
-        Sleep(2000)
-        return;
-    }
-    fread(&n, sizeof(unsigned int), 1, f);
-    char tmp[n*n];
-    fread(tmp, sizeof(char), n*n, f);
-    struct MAP block[n][n];
-    new_load_map(n,block,tmp,f);*/
-    //main_menu();
+    main_menu();
     return 0;
 }
 
@@ -82,8 +63,75 @@ void first_add_cell(){
 
 
 void one_player(){
+    char name[256],c;///open new map;
+    unsigned int n;
+    printf("Enter Name of File (.bin): ");
+    scanf("%c",&c);
+    gets(name);
+    if(name[0]=='\0'){
+        strcpy(name,"map.bin");
+        puts(name);
+    }
+    FILE *f = fopen(name,"r+b");
+    if(f==NULL){
+        system("cls");
+        printf("File Not Found !");
+        Sleep(2000);
+        main_menu();
+    }
+    fread(&n, sizeof(unsigned int), 1, f);
+    char tmp[n*n];
+    fread(tmp, sizeof(char), n*n, f);
+    struct MAP block[n][n];
+    new_load_map(n,block,tmp,f);
+
+
+    int num,i,j,rx,ry;///making cells
+    struct position pos;
     Make_A_List();
-    pth_player_1=pth;
+    struct Head *pth_player_1=pth;
+    pth = pth_player_1;
+    printf("Tedade Cell Haye Avvalye : ");
+    scanf("%d",&num);
+    for(i=0;i<num;i++){
+        char cellname[256];
+        printf("Enter Name of Cell (Enter for Random): ");
+        if(i==0)
+            scanf("%c",&c);
+        gets(cellname);
+        if(cellname[0]=='\0'){
+            int r = rand_beetwin(1,12);
+            char *cn = rand_name(r);
+            strcpy(cellname,cn);
+            puts(cellname);
+        }
+        addEnd(Make_A_Cell(rand_place(n,block,cellname,'0'),cellname));
+    }
+
+
+
+}
+
+struct position rand_place(int n,struct MAP block[n][n],char cellname[],char player){
+    int rx,ry;
+    struct position place;
+    do{
+        rx = rand_beetwin(1,n);
+        ry = rand_beetwin(1,n);
+    }
+    while(!check_forbidden_block(rx,ry,n,block));
+    block[ry-1][rx-1].player[0]=cellname[0];
+    block[ry-1][rx-1].player[1]=player;
+    place.x = rx;
+    place.y = ry;
+    return place;
+}
+
+int check_forbidden_block(int x,int y,int n,struct MAP block[n][n]){
+    if(block[y-1][x-1].type=='3'){
+        return 1;
+    }
+    return 0;
 }
 
 void two_player(){
@@ -92,7 +140,21 @@ void two_player(){
     Make_A_List();
     pth_player_2=pth;
 }
-void in_game_menu(){
+
+char *rand_name(int size){
+    int i;
+    char *name = malloc((size+1)*sizeof(char));
+    char allchars[] = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789";
+    for(i=0;i<size;i++){
+        int n = rand() % (sizeof(allchars) / sizeof(char) -1);
+        name[i]=allchars[n];
+    }
+    name[size]='\0';
+    printf("%s  ",name);
+    return name;
+}
+
+/**void in_game_menu(){
     int a=0;
     system("cls");
     while(!(a==1||a==2||a==3||a==4||a==5)){
@@ -120,19 +182,19 @@ void in_game_menu(){
             main_menu();
             break;
     }
-}
+}*/
 
 
 void main_menu(){
     int a=0;
     system("cls");
-    while(!(a==1||a==2||a==3||a==4||a==5)){
-        printf("***MAIN MENU***\n\n1)Load Game\n2)New Single Player Game\n3)New Multi Player Game\n4)Map Editor\n5)Setting\n6)Extra7)Exit\n");
+    while(!(a==1||a==2||a==3||a==4||a==5||a==6||a==7)){
+        printf("***MAIN MENU***\n\n1)Load Game\n2)New Single Player Game\n3)New Multi Player Game\n4)Map Editor\n5)Setting\n6)Extra\n7)Exit\n");
         scanf("%d",&a);
     }
     switch(a){
         case 1:
-            load_game();
+            //load_game();
             break;
         case 2:
             one_player();
@@ -145,6 +207,7 @@ void main_menu(){
             main_menu();
             break;
         case 5:
+            main_menu();
             break;
         case 6:
             extra();
@@ -263,8 +326,10 @@ void new_load_map(int n,struct MAP block[n][n],char tmp[n*n],FILE *f){
     for(i=0;i<n;i++){
         for(j=0;j<n;j++){
             block[i][j].type=tmp[n*i+j];
-            block[i][j].xy.x=j+1;
-            block[i][j].xy.y=i+1;
+            block[i][j].pos.x=j+1;
+            block[i][j].pos.y=i+1;
+            block[i][j].player[0]='.';
+            block[i][j].player[1]='.';
             if(block[i][j].type=='1')
                 block[i][j].energy=100;
             else
@@ -276,17 +341,21 @@ void new_load_map(int n,struct MAP block[n][n],char tmp[n*n],FILE *f){
 int rand_beetwin(int start,int end){
     return ((rand()*1.0)/(RAND_MAX+1))*(end-start+1)+start;
 }
+
 void extra(){
     system("cls");
     printf("Map of Next Version\n\n");
-    printf("          _____\n         /     \\ \n   _____/   o   \\_____\n  /     \\       /     \\ \n /   o   \\_____/   o   \\ \n \\       /     \\       / \n  \\_____/   o   \\_____/ \n  /     \\       /     \\ \n /   o   \\_____/   o   \\ \n \\       /     \\       / \n  \\_____/   o   \\_____/ \n        \\       / \n         \\_____/ \n");
-    Sleep("4000");
+    printf("   _____         _____\n  /     \\       /     \\ \n /   o   \\_____/   o   \\ \n \\       /     \\       /\n  \\_____/   o   \\_____/\n  /     \\       /     \\ \n /   o   \\_____/   o   \\ \n \\       /     \\       / \n  \\_____/   o   \\_____/ \n  /     \\       /     \\ \n /   o   \\_____/   o   \\ \n \\       /     \\       / \n  \\_____/   o   \\_____/ \n        \\       / \n         \\_____/ \n");
+    Sleep(4000);
+    return;
 }
 ///Next Version Map
 /**
-          _____
-         /     \
-   _____/       \_____
+   _____         _____
+  /     \       /     \
+ /       \_____/       \
+ \       /     \       /
+  \_____/       \_____/
   /     \       /     \
  /       \_____/       \
  \       /     \       /
@@ -297,5 +366,6 @@ void extra(){
   \_____/       \_____/
         \       /
          \_____/
+
 */
 
